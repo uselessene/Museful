@@ -8,10 +8,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +54,7 @@ fun LibraryScreen(
     val scope = rememberCoroutineScope()
 
     var userBooks by remember { mutableStateOf<List<UserBook>>(emptyList()) }
+    var bookToDelete by remember { mutableStateOf<Long?>(null) }
 
     fun reloadBooks() {
         val userId = auth.currentUserId() ?: return
@@ -94,7 +94,7 @@ fun LibraryScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(30.dp))
 
             if (books.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -104,7 +104,7 @@ fun LibraryScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(start = 40.dp, end = 40.dp, bottom = 30.dp),
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 30.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     modifier = Modifier.fillMaxSize()
@@ -174,12 +174,20 @@ fun LibraryScreen(
                                     model = ImageRequest.Builder(LocalContext.current).data(book.coverUrl).build(),
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxWidth().height(271.dp).clip(RoundedCornerShape(30.dp))
+                                    modifier = Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(30.dp))
                                 )
                                 Spacer(Modifier.height(8.dp))
-                                Text(book.title, fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary,
-                                    textAlign = TextAlign.Center, maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(book.title, fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary,
+                                        textAlign = TextAlign.Center, maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    IconButton(onClick = { bookToDelete = book.id }, modifier = Modifier.size(24.dp)) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
                                 Text(book.author, fontFamily = Osnova, fontSize = 10.sp, color = MaterialTheme.colorScheme.onBackground,
                                     textAlign = TextAlign.Center, maxLines = 1,
                                     overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
@@ -188,6 +196,34 @@ fun LibraryScreen(
                     }
                 }
             }
+        }
+
+        if (bookToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { bookToDelete = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(30.dp),
+                title = { Text("Удалить книгу?", fontFamily = Dop, color = MaterialTheme.colorScheme.primary) },
+                text = { Text("Вы уверены, что хотите удалить эту книгу из своей библиотеки?", fontFamily = Osnova, color = MaterialTheme.colorScheme.onSurface) },
+                confirmButton = {
+                    Text("Удалить", fontFamily = Osnova, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable {
+                            val userId = auth.currentUserId()
+                            val idToDelete = bookToDelete
+                            if (userId != null && idToDelete != null) {
+                                scope.launch {
+                                    repo.deleteUserBook(userId, idToDelete)
+                                    reloadBooks()
+                                }
+                            }
+                            bookToDelete = null
+                        })
+                },
+                dismissButton = {
+                    Text("Отмена", fontFamily = Osnova, color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.clickable { bookToDelete = null })
+                }
+            )
         }
     }
 }

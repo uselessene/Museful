@@ -110,4 +110,15 @@ class ReadingRepository {
             supabase.from("quotes").insert(quote)
         } catch (e: Exception) { }
     }
+
+    suspend fun deleteUserBook(userId: String, bookId: Long) {
+        try {
+            supabase.from("user_books").delete {
+                filter {
+                    eq("user_id", userId)
+                    eq("book_id", bookId)
+                }
+            }
+        } catch (e: Exception) { }
+    }
 }
