@@ -172,32 +172,45 @@ fun SearchField(
 @Composable
 fun BookCard(book: Book, onClick: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(context = LocalContext.current).data(book.coverUrl).crossfade(true).build(),
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(book.coverUrl)
+                .crossfade(true)
+                .build(),
             contentDescription = book.title,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().height(271.dp).clip(RoundedCornerShape(30.dp))
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(271.dp)
+                .clip(RoundedCornerShape(30.dp))
         )
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             text = book.title,
             fontFamily = Osnova,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.primary,
+            fontSize = 14.sp,
+            lineHeight = 18.sp,
+            color = Color(0xFF803D4D),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
+
         Text(
             text = book.author,
             fontFamily = Osnova,
-            fontSize = 10.sp,
-            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 11.sp,
+            lineHeight = 13.sp,
+            color = Color(0xFF3B2D2D),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

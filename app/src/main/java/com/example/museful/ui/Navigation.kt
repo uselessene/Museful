@@ -54,24 +54,38 @@ fun MusefulNavGraph() {
         }
 
         composable(Routes.HOME) {
-            HomeScreen(
-                session = session,
-                onCatalogClick = { navController.navigate(Routes.CATALOG) },
-                onHomeClick = {},
-                onSeriesClick = { navController.navigate(Routes.SERIES) },
-                onProfileClick = { navController.navigate(Routes.PROFILE) },
-                onSeriesDayClick = { navController.navigate(Routes.SERIES) }
-            )
+            if (!session.isLoggedIn) {
+                WelcomeScreen(
+                    onRegisterClick = { navController.navigate(Routes.REGISTER) },
+                    onLoginClick = { navController.navigate(Routes.LOGIN) }
+                )
+            } else {
+                HomeScreen(
+                    session = session,
+                    onCatalogClick = { navController.navigate(Routes.CATALOG) },
+                    onHomeClick = {},
+                    onSeriesClick = { navController.navigate(Routes.SERIES) },
+                    onProfileClick = { navController.navigate(Routes.PROFILE) },
+                    onSeriesDayClick = { navController.navigate(Routes.SERIES) }
+                )
+            }
         }
 
         composable(Routes.SERIES) {
-            SeriesScreen(
-                session = session,
-                onCatalogClick = { navController.navigate(Routes.CATALOG) },
-                onHomeClick = { navController.navigate(Routes.HOME) },
-                onSeriesClick = {},
-                onProfileClick = { navController.navigate(Routes.PROFILE) }
-            )
+            if (!session.isLoggedIn) {
+                WelcomeScreen(
+                    onRegisterClick = { navController.navigate(Routes.REGISTER) },
+                    onLoginClick = { navController.navigate(Routes.LOGIN) }
+                )
+            } else {
+                SeriesScreen(
+                    session = session,
+                    onCatalogClick = { navController.navigate(Routes.CATALOG) },
+                    onHomeClick = { navController.navigate(Routes.HOME) },
+                    onSeriesClick = {},
+                    onProfileClick = { navController.navigate(Routes.PROFILE) }
+                )
+            }
         }
 
         composable(Routes.PROFILE) {

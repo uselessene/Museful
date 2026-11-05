@@ -15,3 +15,15 @@ data class Book(
     @SerialName("page_count") val pageCount: Int? = null,
     val language: String? = null
 )
+
+@Serializable
+data class BookGenreEntry(
+    @SerialName("book_id") val bookId: Long,
+    @SerialName("genre_id") val genreId: Long
+)
+
+@Serializable
+data class GenreEntry(
+    val id: Long,
+    val name: String
+)

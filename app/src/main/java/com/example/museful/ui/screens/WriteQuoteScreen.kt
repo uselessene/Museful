@@ -77,7 +77,7 @@ fun WriteQuoteScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(selectedBook?.title ?: "—", fontFamily = Osnova, fontSize = 12.sp,
+                        Text(selectedBook?.title ?: " ", fontFamily = Osnova, fontSize = 12.sp,
                             color = Color(0xFF3B2D2D), modifier = Modifier.weight(1f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1)
                         Image(painter = painterResource(R.drawable.spisok), contentDescription = null,

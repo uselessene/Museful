@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import com.example.museful.data.SessionViewModel
 import com.example.museful.network.Review
 import com.example.museful.ui.theme.Dop
 import com.example.museful.ui.theme.Osnova
+import kotlinx.coroutines.launch
 
 @Composable
 fun ReviewsScreen(
@@ -35,16 +37,23 @@ fun ReviewsScreen(
     val auth = remember { AuthRepository() }
     val repo = remember { ReadingRepository() }
     val viewModel: BookViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val scope = rememberCoroutineScope()
 
     var reviews by remember { mutableStateOf<List<Review>>(emptyList()) }
     var selectedTab by remember { mutableStateOf("Все") }
+    var reviewToDelete by remember { mutableStateOf<Review?>(null) }
+
     val booksMap = viewModel.books.associateBy { it.id }
 
-    LaunchedEffect(Unit) { session.refresh() }
-    LaunchedEffect(session.isLoggedIn) {
-        val userId = auth.currentUserId() ?: return@LaunchedEffect
-        reviews = repo.getReviews(userId)
+    fun reload() {
+        val userId = auth.currentUserId() ?: return
+        scope.launch {
+            reviews = repo.getReviews(userId)
+        }
     }
+
+    LaunchedEffect(Unit) { session.refresh() }
+    LaunchedEffect(session.isLoggedIn) { reload() }
 
     val filteredReviews = when (selectedTab) {
         "positive" -> reviews.filter { it.mood == "positive" }
@@ -122,9 +131,14 @@ fun ReviewsScreen(
                                 Text("${book?.author ?: ""} - ${book?.title ?: ""}",
                                     fontFamily = Osnova, fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
+
                                 moodIcon?.let {
                                     Image(painter = painterResource(it), contentDescription = null,
                                         modifier = Modifier.size(28.dp))
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                IconButton(onClick = { reviewToDelete = r }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.primary)
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
@@ -146,6 +160,34 @@ fun ReviewsScreen(
                     }
                 }
             }
+        }
+
+        if (reviewToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { reviewToDelete = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(30.dp),
+                title = { Text("Удалить рецензию?", fontFamily = Dop, color = MaterialTheme.colorScheme.primary) },
+                text = { Text("Вы уверены, что хотите удалить эту рецензию?", fontFamily = Osnova, color = MaterialTheme.colorScheme.onSurface) },
+                confirmButton = {
+                    Text("Удалить", fontFamily = Osnova, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable {
+                            val userId = auth.currentUserId()
+                            val toDelete = reviewToDelete
+                            if (userId != null && toDelete != null) {
+                                scope.launch {
+                                    repo.deleteReview(userId, toDelete.bookId)
+                                    reload()
+                                }
+                            }
+                            reviewToDelete = null
+                        })
+                },
+                dismissButton = {
+                    Text("Отмена", fontFamily = Osnova, color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.clickable { reviewToDelete = null })
+                }
+            )
         }
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -168,7 +169,8 @@ fun BookScreen(
                             fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.height(8.dp))
                         Text(b.description ?: "Описание отсутствует",
-                            fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                            fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
@@ -182,12 +184,14 @@ fun BookScreen(
                         Text("Характеристики книги", fontFamily = Osnova, fontWeight = FontWeight.Bold,
                             fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.height(8.dp))
-                        Text("Жанр: ${if (state.genres.isEmpty()) "—" else state.genres.joinToString(", ")}",
-                            fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("Год издания: ${b.publishedYear ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("Количество страниц: ${b.pageCount ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("Язык: ${b.language ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Text("ISBN: ${b.isbn ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+
+                        val genresText = if (state.genres.isEmpty()) "Не указан" else state.genres.joinToString(", ")
+
+                        Text("Жанр: $genresText", fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Год издания: ${b.publishedYear ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Количество страниц: ${b.pageCount ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Язык: ${b.language ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("ISBN: ${b.isbn ?: "—"}", fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
@@ -215,7 +219,7 @@ fun BookScreen(
                             .clickable { onWriteReviewClick() }
                             .padding(16.dp)
                     ) {
-                        Text(state.review?.content ?: "", fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text(state.review?.content ?: "", fontFamily = Osnova, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 

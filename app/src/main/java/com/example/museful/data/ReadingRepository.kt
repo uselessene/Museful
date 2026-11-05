@@ -63,6 +63,14 @@ class ReadingRepository {
         }
     }
 
+    suspend fun deleteUserBook(userId: String, bookId: Long) {
+        try {
+            supabase.from("user_books").delete {
+                filter { eq("user_id", userId); eq("book_id", bookId) }
+            }
+        } catch (e: Exception) { }
+    }
+
     suspend fun getReviews(userId: String): List<Review> {
         return try {
             supabase.from("reviews").select {
@@ -96,6 +104,14 @@ class ReadingRepository {
         } catch (e: Exception) { }
     }
 
+    suspend fun deleteReview(userId: String, bookId: Long) {
+        try {
+            supabase.from("reviews").delete {
+                filter { eq("user_id", userId); eq("book_id", bookId) }
+            }
+        } catch (e: Exception) { }
+    }
+
     suspend fun getQuotes(userId: String): List<Quote> {
         return try {
             supabase.from("quotes").select {
@@ -111,13 +127,10 @@ class ReadingRepository {
         } catch (e: Exception) { }
     }
 
-    suspend fun deleteUserBook(userId: String, bookId: Long) {
+    suspend fun deleteQuote(id: Long) {
         try {
-            supabase.from("user_books").delete {
-                filter {
-                    eq("user_id", userId)
-                    eq("book_id", bookId)
-                }
+            supabase.from("quotes").delete {
+                filter { eq("id", id) }
             }
         } catch (e: Exception) { }
     }

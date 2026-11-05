@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import com.example.museful.data.SessionViewModel
 import com.example.museful.network.Quote
 import com.example.museful.ui.theme.Dop
 import com.example.museful.ui.theme.Osnova
+import kotlinx.coroutines.launch
 
 @Composable
 fun QuotesScreen(
@@ -36,15 +38,21 @@ fun QuotesScreen(
     val auth = remember { AuthRepository() }
     val repo = remember { ReadingRepository() }
     val viewModel: BookViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val scope = rememberCoroutineScope()
 
     var quotes by remember { mutableStateOf<List<Quote>>(emptyList()) }
+    var quoteToDelete by remember { mutableStateOf<Quote?>(null) }
     val booksMap = viewModel.books.associateBy { it.id }
 
-    LaunchedEffect(Unit) { session.refresh() }
-    LaunchedEffect(session.isLoggedIn) {
-        val userId = auth.currentUserId() ?: return@LaunchedEffect
-        quotes = repo.getQuotes(userId)
+    fun reload() {
+        val userId = auth.currentUserId() ?: return
+        scope.launch {
+            quotes = repo.getQuotes(userId)
+        }
     }
+
+    LaunchedEffect(Unit) { session.refresh() }
+    LaunchedEffect(session.isLoggedIn) { reload() }
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
@@ -99,10 +107,13 @@ fun QuotesScreen(
                             .background(MaterialTheme.colorScheme.surface).padding(16.dp)
                     ) {
                         Column {
-                            Row(Modifier.fillMaxWidth()) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Image(painter = painterResource(R.drawable.kav1), contentDescription = null,
                                     modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.weight(1f))
+                                IconButton(onClick = { quoteToDelete = q }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.primary)
+                                }
                             }
                             Text(
                                 q.content,
@@ -121,13 +132,37 @@ fun QuotesScreen(
                             Text("${book?.author ?: ""} - ${book?.title ?: ""}",
                                 fontFamily = Osnova, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-
-                            Text("2026-10-20", fontFamily = Osnova, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         }
                     }
                 }
             }
+        }
+
+        if (quoteToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { quoteToDelete = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(30.dp),
+                title = { Text("Удалить цитату?", fontFamily = Dop, color = MaterialTheme.colorScheme.primary) },
+                text = { Text("Вы уверены, что хотите удалить эту цитату?", fontFamily = Osnova, color = MaterialTheme.colorScheme.onSurface) },
+                confirmButton = {
+                    Text("Удалить", fontFamily = Osnova, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable {
+                            val toDelete = quoteToDelete
+                            if (toDelete?.id != null) {
+                                scope.launch {
+                                    repo.deleteQuote(toDelete.id!!)
+                                    reload()
+                                }
+                            }
+                            quoteToDelete = null
+                        })
+                },
+                dismissButton = {
+                    Text("Отмена", fontFamily = Osnova, color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.clickable { quoteToDelete = null })
+                }
+            )
         }
     }
 }

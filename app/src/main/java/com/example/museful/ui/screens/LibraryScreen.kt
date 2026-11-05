@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -94,7 +95,7 @@ fun LibraryScreen(
                 }
             }
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(40.dp))
 
             if (books.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -104,8 +105,8 @@ fun LibraryScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 30.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    contentPadding = PaddingValues(start = 40.dp, end = 40.dp, bottom = 30.dp),
+                    verticalArrangement = Arrangement.spacedBy(22.dp),
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -118,52 +119,63 @@ fun LibraryScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Box {
-                                Box(
-                                    Modifier.fillMaxWidth().height(30.dp)
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .background(currentColor)
-                                        .clickable { menuExpanded = true },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
-                                        Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    Box(
+                                        Modifier.fillMaxWidth().height(30.dp)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(currentColor)
+                                            .clickable { menuExpanded = true },
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Text(currentStatus, fontFamily = Osnova, fontSize = 11.sp,
-                                            color = Color(0xFF3B2D2D), modifier = Modifier.weight(1f),
-                                            textAlign = TextAlign.Center)
-                                        Image(painter = painterResource(R.drawable.spisok), contentDescription = null,
-                                            modifier = Modifier.size(12.dp))
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(currentStatus, fontFamily = Osnova, fontSize = 11.sp,
+                                                color = Color(0xFF3B2D2D), modifier = Modifier.weight(1f),
+                                                textAlign = TextAlign.Center)
+                                            Image(painter = painterResource(R.drawable.spisok), contentDescription = null,
+                                                modifier = Modifier.size(12.dp))
+                                        }
+                                    }
+                                    DropdownMenu(
+                                        expanded = menuExpanded,
+                                        onDismissRequest = { menuExpanded = false },
+                                        modifier = Modifier.background(MaterialTheme.colorScheme.surface).clip(RoundedCornerShape(20.dp))
+                                    ) {
+                                        statusList.forEach { (name, color) ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Box(
+                                                        Modifier.fillMaxWidth().clip(RoundedCornerShape(100.dp))
+                                                            .background(color).padding(vertical = 8.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(name, fontFamily = Osnova, fontSize = 12.sp, color = Color(0xFF3B2D2D))
+                                                    }
+                                                },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    val userId = auth.currentUserId() ?: return@DropdownMenuItem
+                                                    scope.launch {
+                                                        repo.saveUserBook(UserBook(userId = userId, bookId = book.id, status = name))
+                                                        reloadBooks()
+                                                    }
+                                                }
+                                            )
+                                        }
                                     }
                                 }
-                                DropdownMenu(
-                                    expanded = menuExpanded,
-                                    onDismissRequest = { menuExpanded = false },
-                                    modifier = Modifier.background(MaterialTheme.colorScheme.surface).clip(RoundedCornerShape(20.dp))
-                                ) {
-                                    statusList.forEach { (name, color) ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Box(
-                                                    Modifier.fillMaxWidth().clip(RoundedCornerShape(100.dp))
-                                                        .background(color).padding(vertical = 8.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(name, fontFamily = Osnova, fontSize = 12.sp, color = Color(0xFF3B2D2D))
-                                                }
-                                            },
-                                            onClick = {
-                                                menuExpanded = false
-                                                val userId = auth.currentUserId() ?: return@DropdownMenuItem
-                                                scope.launch {
-                                                    repo.saveUserBook(UserBook(userId = userId, bookId = book.id, status = name))
-                                                    reloadBooks()
-                                                }
-                                            }
-                                        )
-                                    }
+
+                                Spacer(Modifier.width(8.dp))
+
+                                IconButton(onClick = { bookToDelete = book.id }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.primary)
                                 }
                             }
 
@@ -174,23 +186,38 @@ fun LibraryScreen(
                                     model = ImageRequest.Builder(LocalContext.current).data(book.coverUrl).build(),
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(30.dp))
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(271.dp)
+                                        .clip(RoundedCornerShape(30.dp))
                                 )
-                                Spacer(Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(book.title, fontFamily = Osnova, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary,
-                                        textAlign = TextAlign.Center, maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                                    IconButton(onClick = { bookToDelete = book.id }, modifier = Modifier.size(24.dp)) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.primary)
-                                    }
-                                }
-                                Text(book.author, fontFamily = Osnova, fontSize = 10.sp, color = MaterialTheme.colorScheme.onBackground,
-                                    textAlign = TextAlign.Center, maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = book.title,
+                                    fontFamily = Osnova,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    lineHeight = 18.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Text(
+                                    text = book.author,
+                                    fontFamily = Osnova,
+                                    fontSize = 11.sp,
+                                    lineHeight = 13.sp,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }

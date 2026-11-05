@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.museful.data.ReadingRepository
 import com.example.museful.data.supabase
 import com.example.museful.network.Book
+import com.example.museful.network.BookGenreEntry
+import com.example.museful.network.GenreEntry
 import com.example.museful.network.Review
 import com.example.museful.network.UserBook
 import io.github.jan.supabase.postgrest.from
@@ -12,14 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class BookGenreEntry(@SerialName("genre_id") val genreId: Long)
-
-@Serializable
-data class GenreEntry(val id: Long, val name: String)
 
 data class BookDetailState(
     val book: Book? = null,
@@ -44,13 +38,19 @@ class BookDetailViewModel : ViewModel() {
             } catch (e: Exception) { null }
 
             val genresList = try {
-                val bg = supabase.from("book_genres").select { filter { eq("book_id", bookId) } }.decodeList<BookGenreEntry>()
-                val genreIds = bg.map { it.genreId }
-                if (genreIds.isNotEmpty()) {
-                    val gs = supabase.from("genres").select().decodeList<GenreEntry>()
-                    gs.filter { it.id in genreIds }.map { it.name }
-                } else emptyList()
-            } catch (e: Exception) { emptyList() }
+                // Скачиваем ВСЕ жанры и ВСЕ связи, чтобы избежать ошибок фильтрации
+                val allGenres = supabase.from("genres").select().decodeList<GenreEntry>()
+                val allBookGenres = supabase.from("book_genres").select().decodeList<BookGenreEntry>()
+
+                // Ищем какие ID жанров привязаны к этой конкретной книге
+                val genreIdsForBook = allBookGenres.filter { it.bookId == bookId }.map { it.genreId }
+
+                // Сопоставляем ID с названиями
+                allGenres.filter { it.id in genreIdsForBook }.map { it.name }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
 
             var status: String? = null
             var review: Review? = null
